@@ -1,15 +1,18 @@
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post
+from .models import Post, Comment
 from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 
 
 def hello(request):
     return JsonResponse({'message': 'Hello Blog!'})
 
 
+@cache_page(60)
 @login_required
 def post_list(request):
     posts = Post.objects.all()
@@ -19,9 +22,13 @@ def post_list(request):
     return render(request, 'blog/post_list.html', {'page_obj': page_obj})
 
 
+@login_required
+@cache_page(60)
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     comments = post.comments.all()
+    comment_count = get_comment_count(post)
+
     if request.method == "POST":
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -29,11 +36,28 @@ def post_detail(request, post_id):
             comment.post = post
             comment.author = request.user
             comment.save()
+            cache.delete(f'comment_count_{post.id}')
             return redirect('post_detail', post_id=post.id)
     else:
         form = CommentForm()
 
-    return render(request, 'blog/post_detail.html', {'post': post, 'comments': comments, 'form': form})
+    return render(request, 'blog/post_detail.html', {
+        'post': post,
+        'comments': comments,
+        'form': form,
+        'comment_count': comment_count,
+    })
+
+
+def get_comment_count(post):
+    cache_key = f'comment_count_{post.id}'
+    comment_count = cache.get(cache_key)
+
+    if comment_count is None:
+        comment_count = Comment.objects.filter(post=post).count()
+        cache.set(cache_key, comment_count, timeout=60)
+
+    return comment_count
 
 
 @login_required
@@ -72,3 +96,11 @@ def post_delete(request, post_id):
     return render(request, 'blog/post_delete.html', {'post': post})
 
 
+def optimized_post_list(request):
+    posts = Post.objects.select_related('author').prefetch_related('comments')
+
+    paginator = Paginator(posts, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'blog/post_list.html', {'page_obj': page_obj})

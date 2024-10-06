@@ -1,3 +1,4 @@
+
 <h1>{{ post.title }}</h1>
 <p>{{ post.content }}</p>
 <p>Author: {{ post.author }}</p>
@@ -8,11 +9,14 @@
     <a href="{% url 'post_delete' post.id %}">Delete</a>
 {% endif %}
 
-<h2>Комментарии</h2>
+<h2>Комментарии ({{ comment_count }})</h2>
 <ul>
+    {% load cache %}
+    {% cache 60 comment_list post.id %}
     {% for comment in comments %}
-        <li><strong>{{ comment.author }}</strong>: {{ comment.text }}</li>
+        <li><strong>{{ comment.author }}</strong>: {{ comment.t,ext }}</li>
     {% endfor %}
+    {% endcache %},
 </ul>
 
 <h2>Добавить комментарий</h2>

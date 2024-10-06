@@ -1,4 +1,7 @@
 <h1>Blog Posts</h1>
+<div>
+    <a href=""></a>
+</div>
 <ul>
     {% for post in page_obj %}
     <li><a href="{% url 'post_detail' post.id %}">{{ post.title }}</a></li>
