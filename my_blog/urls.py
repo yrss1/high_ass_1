@@ -16,10 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from .views import health_check
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('accounts/', include('accounts.urls')),
     path('blogs/', include('blog.urls')),
+    path('health/', health_check, name='health_check'),
 ]
+# http: // 192.168.1.6: 9090

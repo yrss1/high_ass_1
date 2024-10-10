@@ -14,7 +14,7 @@
     {% load cache %}
     {% cache 60 comment_list post.id %}
     {% for comment in comments %}
-        <li><strong>{{ comment.author }}</strong>: {{ comment.t,ext }}</li>
+        <li><strong>{{ comment.author }}</strong>: {{ comment.text }}</li>
     {% endfor %}
     {% endcache %},
 </ul>
