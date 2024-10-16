@@ -13,7 +13,7 @@ class Post(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['author']),
-            models.Index(fields=['created_at']),  # Возможно, также стоит индексировать дату создания
+            models.Index(fields=['created_at']),
         ]
 
     def __str__(self):
